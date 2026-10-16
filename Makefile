@@ -1,5 +1,7 @@
 INSTALL_DIR=~/.local/share/gnome-shell/extensions
 SRC_DIR=sound-output-device-chooser@kgshank.net
+BUILD_DIR=dist/$(SRC_DIR)
+LEGACY ?= 0
 LOCALE_SRC=$(shell find $(SRC_DIR) -regextype posix-extended -regex '.*\.(js|glade)' 2> /dev/null)
 LOCALE_DIR=$(SRC_DIR)/locale
 POT_FILE=$(SRC_DIR)/sound-output-device-chooser.pot
@@ -11,7 +13,10 @@ all: build install
 
 .PHONY: build
 build: $(MO_FILES)
-	glib-compile-schemas $(SRC_DIR)/schemas
+	mkdir -p $(BUILD_DIR)
+	cp -r $(SRC_DIR)/. $(BUILD_DIR)/
+	if [ "$(LEGACY)" = "1" ]; then cp legacy/* $(BUILD_DIR)/; fi
+	glib-compile-schemas $(BUILD_DIR)/schemas
 
 .PHONY: potfile
 potfile:
@@ -46,10 +51,10 @@ $(LOCALE_DIR)/%/LC_MESSAGES/sound-output-device-chooser.mo: $(LOCALE_DIR)/%/LC_M
 	msgfmt --check --output-file=$@ $<
 
 .PHONY: install
-install:
+install: build
 	@echo "Installing extension files in $(INSTALL_DIR)/sound-output-device-chooser@kgshank.net"
 	mkdir -p $(INSTALL_DIR)
-	cp -r $(SRC_DIR)  $(INSTALL_DIR)
+	cp -r $(BUILD_DIR) $(INSTALL_DIR)
 
 enable:
 	gnome-extensions enable $(SRC_DIR)
